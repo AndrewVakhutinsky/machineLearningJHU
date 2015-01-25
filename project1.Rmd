@@ -1,0 +1,38 @@
+---
+title: "Machine Learning Project"
+output: html_document
+---
+<h3>Data Exploratory Analysis</h3>
+By simply viewing the data, it is easy to see that there are variables that are irrelevant to predicting the "classe" output and therefore have to be removed from the model.  These variables include names of the participants, timestamps and the observation index.  There are also varibles used to summarize several previous observations. These variables are also excluded from the model. Finally, we have 52 variables that have numerical values in each observation.  These are the variables to be used in the model.  To simplify the modeling process, we create a new data frame called pmlTrain.
+
+<h3>Cross-validation</h3>
+In order to achieve the best balance between accuracy and running time of the model, we use two-fold cross-validation in the following way.  First, we make 50-50 random split of the training data:
+```
+inTrain<-createDataPartition(y=pmlTrain$classe, p=0.5, list=FALSE)
+pmlTrain1 = pmlTrain[inTrain,]
+pmlTrain2 = pmlTrain[-inTrain,]
+```
+After that, we perform separate training on each of the two data sets using Random Forest method ("rf") and cross-validate the fitness of the model using the other data set:
+```
+modfit1 = train(classe~.,data=pmlTrain1,method="rf")
+confusionMatrix(predict(modfit1,pmlTrain2),pmlTrain2$classe)
+```
+and similarly
+```
+modfit2 = train(classe~.,data=pmlTrain2,method="rf")
+confusionMatrix(predict(modfit2,pmlTrain1),pmlTrain1$classe)
+```
+In both cases the cross-validation accuracy is about 99%, which we consider sufficient.
+
+<h3>Prediction of the test data</h3>
+In order to predict the test data, we train the model using the entire training data set:
+```
+modfit = train(classe~.,data=pmlTrain,method="rf")
+predTest = predict(modfit,pml.testing)
+predTest
+ [1] B A B A A E D B A A B C B A E E A B B B
+Levels: A B C D E
+```
+The predTest variable is used as an argument for pml_write_files function described in the assignment submission instructions to prepare submission files.
+
+
